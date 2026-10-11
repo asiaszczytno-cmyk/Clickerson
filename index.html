@@ -6,8 +6,8 @@
 <style>
 :root{--c1:#ef4444;--c2:#b91c1c;}
 body{font-family:sans-serif;background:#09090b;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;gap:15px;}
-.side-box{background:#16161a;border:1px solid #3f3f46;padding:15px;border-radius:16px;width:190px;height:490px;display:flex;flex-direction:column;overflow-y:auto;}
-.main-box{background:#16161a;border:2px solid #6366f1;padding:20px;border-radius:20px;text-align:center;width:340px;height:490px;position:relative;overflow:hidden;}
+.side-box{background:#16161a;border:1px solid #3f3f46;padding:15px;border-radius:16px;width:190px;height:480px;display:flex;flex-direction:column;overflow-y:auto;}
+.main-box{background:#16161a;border:2px solid #6366f1;padding:20px;border-radius:20px;text-align:center;width:340px;height:480px;position:relative;overflow:hidden;}
 .num{font-size:2.5rem;font-weight:900;margin-bottom:2px;}
 .btn-row{display:flex;justify-content:center;align-items:center;gap:12px;margin:15px 0;}
 .btn{background:var(--c1);color:#fff;border:none;width:110px;height:110px;border-radius:50%;font-size:1.1rem;font-weight:bold;cursor:pointer;box-shadow:0 6px 0 var(--c2);outline:none;position:relative;z-index:2;}
@@ -98,6 +98,7 @@ let clicks=0,zlotowki=0.0,clickValue=1,upgradeCost=5,nextMultiplier=2,currentJob
 let purchasedItems=[],hasBot=0,hasDragon=0,hasTitle=0,hasShield=0;
 let businessPartners=0,currentEvent="",myCompanyName="",myCompanyCat="",hasCompany=0;
 let catTricked=0,revengeDone=0,activeTrade=null;
+let stolenClicks=0,stolenCash=0.0;
 const scrD=document.getElementById('scr'),plnD=document.getElementById('pln'),powD=document.getElementById('pow');
 const cB=document.getElementById('click'),aB=document.getElementById('awans');
 const uB=document.getElementById('upgBtn'), uT=document.getElementById('upgT'), uC=document.getElementById('upgC');
@@ -118,6 +119,8 @@ if(localStorage.getItem('clicker_compName'))myCompanyName=localStorage.getItem('
 if(localStorage.getItem('clicker_compCat'))myCompanyCat=localStorage.getItem('clicker_compCat')||"";
 if(localStorage.getItem('clicker_catTricked'))catTricked=parseInt(localStorage.getItem('clicker_catTricked'))||0;
 if(localStorage.getItem('clicker_revenge'))revengeDone=parseInt(localStorage.getItem('clicker_revenge'))||0;
+if(localStorage.getItem('clicker_stolenClicks'))stolenClicks=parseInt(localStorage.getItem('clicker_stolenClicks'))||0;
+if(localStorage.getItem('clicker_stolenCash'))stolenCash=parseFloat(localStorage.getItem('clicker_stolenCash'))||0.0;
 if(localStorage.getItem('clicker_currentJob')){currentJob=localStorage.getItem('clicker_currentJob');jS.innerText="Praca: "+currentJob;jS.style.color="#6366f1";aB.style.display="block";}
 if(localStorage.getItem('clicker_items')){purchasedItems=JSON.parse(localStorage.getItem('clicker_items'));}
 renderEq();update();
@@ -129,6 +132,7 @@ localStorage.setItem('clicker_items',JSON.stringify(purchasedItems));localStorag
 localStorage.setItem('clicker_hasTitle',hasTitle);localStorage.setItem('clicker_hasShield',hasShield);localStorage.setItem('clicker_partners',businessPartners);
 localStorage.setItem('clicker_hasComp',hasCompany);localStorage.setItem('clicker_compName',myCompanyName);localStorage.setItem('clicker_compCat',myCompanyCat);
 localStorage.setItem('clicker_catTricked',catTricked);localStorage.setItem('clicker_revenge',revengeDone);
+localStorage.setItem('clicker_stolenClicks',stolenClicks);localStorage.setItem('clicker_stolenCash',stolenCash);
 }
 function getShortValue(val){
 let absVal=Math.abs(val);
@@ -165,13 +169,24 @@ const cF=document.getElementById('compForm');const cB_banner=document.getElement
 if(hasCompany){cF.style.display="none";cB_banner.innerText="🏢 Korporacja: "+myCompanyName+" ["+myCompanyCat+"]";cB_banner.style.display="block";}else{cF.style.display="block";cB_banner.style.display="none";}
 const catB=document.getElementById('cat-btn');const hkB=document.getElementById('hack-btn');
 if(catTricked){catB.style.display="none";hkB.style.display="block";if(revengeDone){hkB.innerText="🐉 ZEMSTA DOKONANA!";hkB.style.borderColor="#22c55e";hkB.style.color="#22c55e";}else{hkB.style.opacity=clicks<1000000?0.4:1;}}else{catB.style.display="block";hkB.style.display="none";}
-if(activeTrade){
-const hasItem=purchasedItems.includes(activeTrade.need);
-document.getElementById('tBtn').disabled=!hasItem;
+if(activeTrade){const hasItem=purchasedItems.includes(activeTrade.need);document.getElementById('tBtn').disabled=!hasItem;}
+}
+window.dealWithCat=function(){
+if(!catTricked){
+catTricked=1;stolenClicks=clicks;stolenCash=zlotowki;
+localStorage.clear();clicks=0;zlotowki=0.0;clickValue=1;upgradeCost=5;nextMultiplier=2;currentJob="";purchasedItems=[];hasBot=0;hasDragon=0;hasTitle=0;hasShield=0;businessPartners=0;hasCompany=0;
+alert("KOT CIĘ BEZCZELNIE OSZUKAŁ! Ukradł wszystko i uciekł! Zbankrutowałeś...");saveGame();update();renderEq();
 }
 }
-window.dealWithCat=function(){if(!catTricked){catTricked=1;localStorage.clear();clicks=0;zlotowki=0.0;clickValue=1;upgradeCost=5;nextMultiplier=2;currentJob="";purchasedItems=[];hasBot=0;hasDragon=0;hasTitle=0;hasShield=0;businessPartners=0;hasCompany=0;alert("KOT CIĘ BEZCZELNIE OSZUKAŁ! Ukradł wszystko i uciekł! Zbankrutowałeś...");saveGame();update();renderEq();}}
-window.sendHackers=function(){if(catTricked && !revengeDone && clicks>=1000000){clicks-=1000000;revengeDone=1;clicks=999000000000000000;zlotowki=999000000000000000000000.0;hasTitle=1;purchasedItems.push('🐱 Skóra Kota');renderEq();alert("🥷 BANDA HAKERÓW URUCHOMIONA! Odzyskano całą Twoją fortunę!");saveGame();update();}}
+window.sendHackers=function(){
+if(catTricked && !revengeDone && clicks>=1000000){
+clicks-=1000000;revengeDone=1;
+clicks+=stolenClicks;zlotowki+=stolenCash;zlotowki+=1000000000.0;
+purchasedItems.push('🐱 Skóra Kota');renderEq();
+alert("🥷 BANDA HAKERÓW URUCHOMIONA! 🥷\n\nHakerzy rozbili bank kota! Odzyskali dokładnie Twoje stare kliknięcia i pieniądze, a dodatkowo dorzucili 1 000 000 000 zł kary z konta kota!");
+saveGame();update();
+}
+}
 window.setJob=function(jobName){currentJob=jobName;jS.innerText="Praca: "+jobName;jS.style.color="#6366f1";aB.style.display="block";saveGame();update();}
 function createFloatingText(e){const text=document.createElement('div');text.className='floating-text';text.innerText="+"+getShortValue(clickValue);const rect=mainBox.getBoundingClientRect();text.style.left=(e.clientX-rect.left-15)+'px';text.style.top=(e.clientY-rect.top-20)+'px';mainBox.appendChild(text);setTimeout(()=>{text.remove();},600);}
 cB.addEventListener('click',(e)=>{clicks+=clickValue;createFloatingText(e);saveGame();update();});
@@ -184,34 +199,16 @@ window.buyEndDragon=function(){if(!hasDragon && clicks>=600000000000000){clicks-
 window.talkToJanusz=function(){if(clicks>=1000000){clicks-=1000000;zlotowki=0.0;saveGame();update();}}
 window.createCompany=function(){const nameInp=document.getElementById('cName').value;const catInp=document.getElementById('cCat').value;if(!hasCompany && nameInp!=="" && catInp!==""){if(zlotowki>=500000000000000000 || getShortValue(zlotowki)==="Googolplex+"){if(getShortValue(zlotowki)!=="Googolplex+"){zlotowki-=500000000000000000;}hasCompany=1;myCompanyName=nameInp;myCompanyCat=catInp;saveGame();update();}}}
 
-// LOSOWE SYSTEMY WYMIAN (TRADE GUI)
 const tradePool=[
 {npc:"Handlarz Janusz", need:"🍩 Pączek", give:"💎 Diament", cash:1000},
 {npc:"Kolekcjoner Olek", need:"🧦 Skarpeta", give:"🔑 Złoty Klucz", cash:5000},
 {npc:"Gracz VIP", need:"📱 Stary iPhone", give:"📦 Skrzynia Skarbów", cash:50000}
 ];
-setInterval(()=>{
-if(purchasedItems.length>0 && !activeTrade){
-activeTrade=tradePool[Math.floor(Math.random()*tradePool.length)];
-document.getElementById('tNpc').innerText=activeTrade.npc;
-document.getElementById('tOffer').innerText="Chce: "+activeTrade.need+"\nDaje: "+activeTrade.give+" + "+activeTrade.cash+"zł";
-update();
-}
-},20000);
-window.acceptTrade=function(){
-if(activeTrade){
-const idx=purchasedItems.indexOf(activeTrade.need);
-if(idx>-1){
-purchasedItems.splice(idx,1);purchasedItems.push(activeTrade.give);zlotowki+=activeTrade.cash;
-alert("🤝 Wymiana udana z "+activeTrade.npc+"! Oddałeś "+activeTrade.need+" i dostałeś "+activeTrade.give+"!");
-activeTrade=null;document.getElementById('tNpc').innerText="Czekam na gracza...";document.getElementById('tOffer').innerText="";
-document.getElementById('tBtn').disabled=true;renderEq();saveGame();update();
-}
-}
-}
+setInterval(()=>{if(purchasedItems.length>0 && !activeTrade){activeTrade=tradePool[Math.floor(Math.random()*tradePool.length)];document.getElementById('tNpc').innerText=activeTrade.npc;document.getElementById('tOffer').innerText="Chce: "+activeTrade.need+"\nDaje: "+activeTrade.give+" + "+activeTrade.cash+"zł";update();}},20000);
+window.acceptTrade=function(){if(activeTrade){const idx=purchasedItems.indexOf(activeTrade.need);if(idx>-1){purchasedItems.splice(idx,1);purchasedItems.push(activeTrade.give);zlotowki+=activeTrade.cash;alert("🤝 Wymiana udana!");activeTrade=null;document.getElementById('tNpc').innerText="Czekam na gracza...";document.getElementById('tOffer').innerText="";document.getElementById('tBtn').disabled=true;renderEq();saveGame();update();}}}
 
 setInterval(()=>{if(zlotowki>1000000000000 && currentEvent==="") {const box=document.getElementById('evBox');const txt=document.getElementById('evTxt');const roll=Math.random();if(!hasShield && roll < 0.40){currentEvent="ransomware";txt.innerText="⚠️ WYKRYTO ZAGROŻENIE RANSOMWARE! NIE ZGADZAJ SIĘ!";box.style.borderColor="#ef4444";box.style.background="#7f1d1d";box.style.display="block";}else{const cRoll=Math.random();if(cRoll<0.25){currentEvent="google";txt.innerText="💼 Google zaprasza cię na spotkanie!";box.style.borderColor="#22c55e";box.style.background="#064e3b";}else if(cRoll<0.50){currentEvent="youtube";txt.innerText="📺 YouTube chce podpisać kontrakt reklamowy!";box.style.borderColor="#ef4444";box.style.background="#450a0a";}else if(cRoll<0.75){currentEvent="roblox";txt.innerText="🟥 Roblox proponuje stworzenie uniwersum!";box.style.borderColor="#38bdf8";box.style.background="#0c4a6e";}else{currentEvent="microsoft";txt.innerText="💻 Microsoft chce odkupić systemy!";box.style.borderColor="#a855f7";box.style.background="#3b0764";}box.style.display="block";}}},15000);
-window.goEvent=function(){const box=document.getElementById('evBox');if(currentEvent==="ransomware"){zlotowki-=100000000000000000;alert("💥 Ransomware ukradł fortunę!");}else{businessPartners+=1;let c="Partnera";if(currentEvent==="google")c="Google";if(currentEvent==="youtube")c="YouTube";if(currentEvent==="roblox")c="Roblox";if(currentEvent==="microsoft")c="Microsoft";alert("🤝 Kontrakt z "+c+" podpisany! Zysk rośnie o +700B zł co sekundę!");}currentEvent="";box.style.display="none";saveGame();update();}
+window.goEvent=function(){const box=document.getElementById('evBox');if(currentEvent==="ransomware"){zlotowki-=100000000000000000;alert("💥 Ransomware ukradł fortunę!");}else{businessPartners+=1;let c="Partnera";if(currentEvent==="google")c="Google";if(currentEvent==="youtube")c="YouTube";if(currentEvent==="roblox")c="Roblox";if(currentEvent==="microsoft")c="Microsoft";alert("🤝 Kontrakt z "+c+" podpisany! Zysk rośnie!");}currentEvent="";box.style.display="none";saveGame();update();}
 window.ignoreEvent=function(){const box=document.getElementById('evBox');currentEvent="";box.style.display="none";update();}
 window.scratchCard=function(){const r=Math.random();const resD=document.getElementById('scratchResult');if(r<0.95){let strata=1000;const los=Math.floor(Math.random()*5);if(los===1)strata=10000;if(los===2)strata=50000;if(los===3)strata=100000;if(los===4)strata=500000;zlotowki-=strata;resD.innerHTML="🛑 BANKRUT!<br>Straciłeś "+strata+" zł!";resD.style.color="#ef4444";}else if(r<0.98){zlotowki+=1.0;resD.innerHTML="💰 Wygrana:<br>Wygrałeś 1 zł";resD.style.color="#22c55e";}else{zlotowki+=10.0;resD.innerHTML="⭐ Wielki Fuks:<br>Wygrałeś 10 zł!";resD.style.color="#eab308";}saveGame();update();setTimeout(()=>{resD.innerText="";},4000);}
 setInterval(()=>{if(currentJob==="Zamiatacz")zlotowki+=0.05;if(currentJob==="Mistrz Kebabu")zlotowki+=0.25;if(currentJob==="Szef IT")zlotowki+=1.20;if(currentJob!==""){saveGame();update();}},1000);
